@@ -1,5 +1,14 @@
 const Tour = require('../models/Tour');
 const ApiFeatures = require('../utils/ApiFeatures');
+const AppError = require('../utils/AppError');
+
+const catchAsync = (fn) => async (req, res, next) => {
+  try {
+    await fn(req, res, next)
+  } catch (err) {
+    next(new AppError(err.message, 500));
+  }
+};
 
 module.exports.topFiveCheap = (req, res, next) => {
   req.query.limit = 5;
@@ -9,7 +18,7 @@ module.exports.topFiveCheap = (req, res, next) => {
   next();
 };
 
-module.exports.getMonthlyPlan = async (req, res) => {
+module.exports.getMonthlyPlan = catchAsync(async (req, res) => {
   const year = +req.params.year;
 
   const plan = await Tour.aggregate([
@@ -44,10 +53,9 @@ module.exports.getMonthlyPlan = async (req, res) => {
       plan,
     },
   });
-};
+});
 
-
-module.exports.getAll = async (req, res) => {
+module.exports.getAll = catchAsync(async (req, res) => {
   const toursQuery = new ApiFeatures(Tour.find(), req.query)
     .filter()
     .sort()
@@ -60,9 +68,9 @@ module.exports.getAll = async (req, res) => {
       tours: await toursQuery.query,
     },
   });
-};
+});
 
-module.exports.add = async (req, res) => {
+module.exports.add = catchAsync(async (req, res) => {
   const tour = await Tour.create(req.body);
 
   res.status(201).json({
@@ -71,9 +79,9 @@ module.exports.add = async (req, res) => {
       tour,
     },
   });
-};
+});
 
-module.exports.getById = async (req, res) => {
+module.exports.getById = catchAsync(async (req, res) => {
   const tour = await Tour.findById(req.params.id);
 
   res.json({
@@ -82,9 +90,9 @@ module.exports.getById = async (req, res) => {
       tour,
     },
   });
-};
+});
 
-module.exports.updateById = async (req, res) => {
+module.exports.updateById = catchAsync(async (req, res) => {
   const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -96,18 +104,18 @@ module.exports.updateById = async (req, res) => {
       tour,
     },
   });
-};
+});
 
-module.exports.deleteById = async (req, res) => {
+module.exports.deleteById = catchAsync(async (req, res) => {
   await Tour.findByIdAndDelete(req.params.id);
 
   res.status(204).json({
     status: 'success',
     data: null,
   });
-};
+});
 
-module.exports.getToursStats = async (req, res) => {
+module.exports.getToursStats = catchAsync(async (req, res) => {
   const tourStats = await Tour.aggregate([
     {$match: {ratingAverage: {$gte: 4.5}}},
     {
@@ -128,4 +136,4 @@ module.exports.getToursStats = async (req, res) => {
       tourStats,
     },
   });
-};
+});
