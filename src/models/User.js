@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     minLength: [8, 'A user password must have more or equal than 8 characters'],
     maxLength: [30, 'A user password must have less or equal than 30 characters'],
+    select: false,
   },
   email: {
     type: String,
@@ -31,11 +32,20 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'default.jpg',
   },
-});
+  passwordChangedAt: Date,
+}, {
+  methods: {
+    async validatePassword(candidatePassword) {
+      return await bcrypt.compare(candidatePassword, this.password);
+    },
 
-userSchema.pre(/^find/, (next) => {
-  this.select('-__v -password');
-  next();
+    isTokenStale(JWTTimestamp) {
+      if (!this.passwordChangedAt) return false;
+      const changedTimestamp = this.passwordChangedAt.getTime() / 1000;
+
+      return JWTTimestamp < changedTimestamp;
+    }
+  }
 });
 
 userSchema.pre('save', async function(next) {
@@ -44,5 +54,6 @@ userSchema.pre('save', async function(next) {
   this.password = await bcrypt.hash(this.password, 12);
   next();
 })
+
 
 module.exports = mongoose.model('User', userSchema);

@@ -69,6 +69,7 @@ const tourSchema = new mongoose.Schema({
   secret: {
     type: Boolean,
     default: false,
+    select: false,
   },
   startDates: [Date],
 }, {strictQuery: true, toJSON: {virtuals: true}, toObject: {virtuals: true}});
@@ -83,7 +84,7 @@ tourSchema.pre('save', function (next) {
 });
 
 tourSchema.pre(/^find/, function (next) {
-  this.find({secret: {$ne: true}}).select('-secret -__v');
+  this.find({secret: {$ne: true}});
 
   next();
 });
