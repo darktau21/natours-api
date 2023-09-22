@@ -19,7 +19,7 @@ module.exports.getMonthlyPlan = catchAsync(async (req, res) => {
     {
       $match: {
         startDates: {
-          $gte: new Date(year),
+          $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
         },
       },

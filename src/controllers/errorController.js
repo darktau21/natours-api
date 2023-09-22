@@ -16,7 +16,10 @@ const sendProdError = (err, res) => {
       message: err.message
     });
   } else {
-    console.error('ERROR: ', err);
+    setImmediate(() => {
+      console.error('UNHANDLED ERROR!');
+      console.error(err);
+    })
     res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!'
@@ -30,8 +33,8 @@ const handleCastErrorDB = err => {
 }
 
 const handleDuplicateFieldsDB = err => {
-  const value = err.keyValue.name;
-  const message = `Duplicate field value: ${value}. Please use another value.`;
+  const errorMessage = Object.entries(err.keyValue).map(el => `${el[0]}: ${el[1]}`).join(', ')
+  const message = `Fields with given values already exists (${errorMessage}). Please use another value.`;
   return new AppError(message, 400);
 }
 
